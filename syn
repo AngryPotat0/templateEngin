@@ -1,0 +1,36 @@
+insert data:
+{{name}}
+
+<!-- use filter:
+{{story.subject | lowerCase}} => lowerCase(story.subject) -->
+
+<!-- if statement:
+{% if ... %}
+    ...
+{% elif ... %} // 可选
+    ...
+{% else %} // 可选
+    ...
+{% endif %} -->
+
+for statement:
+{% for var in list%}
+    ...
+{%endfor%}
+
+{{name    | lowerCase   }}
+
+<p>Topics for {{name   |  lowerCase}}: {% for t in topics %}lis:{{t}}, {% endfor %}</p>
+
+literal     <p>Topics for 
+expression  name
+literal     :
+for         for
+expression  t
+in          in
+expression  topics
+literal     lis:
+expression  t
+endfor      endfor
+literal     </p>
+str expression str for
