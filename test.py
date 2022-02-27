@@ -8,4 +8,5 @@ def three():
 # exec(python_source, global_namespace)
 # print(global_namespace['SEVENTEEN'])
 # print(global_namespace['three']())
-print(repr("abc"))
+t = "12"
+print("""result.append(%s)""" % repr(t))

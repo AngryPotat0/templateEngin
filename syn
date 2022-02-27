@@ -37,3 +37,9 @@ literal     </p>
 template    str expression str for
 for         t topics body
 body        template
+
+def render_function(context):
+    result = []
+    result.append("<p>TOpic....")
+    result.append(str(c_name))
+    result.append

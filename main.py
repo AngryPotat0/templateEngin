@@ -1,9 +1,9 @@
-from tempfile import template
 from Parser import *
 from Lexer import *
+from Compiler import *
 
 text = '''
-<p>Topics for {{name}}: {% for t in topics %}lis:{{t}}, {% endfor %}</p>
+<p>Topics for {{name}}: {% for t in topics %}{{t}}, {% endfor %}</p>{{name}}
 '''
 
 
@@ -14,5 +14,9 @@ lis = lex.lexer()
 
 p = Parser(lis)
 template = p.parser()
-
-print(template)
+compiler = Compiler()
+code = compiler.compile(template)
+print(code)
+context = {"name":"game","topics":["ttf2","bf1","deadcell","minecraft"]}
+func = exec(code)
+print(render_function(context))

@@ -38,33 +38,6 @@ class FOR(AST):
     def __str__(self) -> str:
         return "For: " + str(self.var) + str(self.iter) + str(self.body)  + "END FOR\n"
 
-class CodeBuilder:
-    def __init__(self,level = 0) -> None:
-        self.code = []
-        self.level = level
-    
-    def addLine(self, line):
-        self.code.append(" " * self.level + line + "\n")
-    
-    def indent(self):
-        self.level += 4
-    
-    def dedent(self):
-        self.level -= 4
-    
-    def addSection(self):
-        section = CodeBuilder(self.level)
-        self.code.append(section)
-        return section
-
-    def getCode(self):
-        if(self.level != 0):
-            return None
-        return str(self)
-    
-    def __str__(self) -> str:
-        return "".join(str(line) for line in self.code)
-
 class Parser:
     def __init__(self,tokenList: List[Token]) -> None:
         self.tokenList = tokenList
