@@ -1,22 +1,26 @@
-from Parser import *
 from Lexer import *
+from Parser import *
 from Compiler import *
 
 text = '''
-<p>Topics for {{name}}: {% for t in topics %}{{t}}, {% endfor %}</p>{{name}}
+<p>{{ viewsDict }}</p>
+<p>{{ viewsDict.name }}</p>
 '''
-
 
 lex = Lexer(text)
 lis = lex.lexer()
-# for token in lis:
-#     print(token)
+for token in lis:
+    print(token)
 
 p = Parser(lis)
 template = p.parser()
+print(template)
+
 compiler = Compiler()
 code = compiler.compile(template)
 print(code)
-context = {"name":"game","topics":["ttf2","bf1","deadcell","minecraft"]}
+
+views_dict = {"name":"AAC"}
+context = {"viewsDict":views_dict}
 func = exec(code)
 print(render_function(context))

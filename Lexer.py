@@ -1,3 +1,4 @@
+from cmath import exp
 from enum import Enum
 
 class TokenType(Enum):
@@ -5,6 +6,8 @@ class TokenType(Enum):
     EXPR    =   'EXPR'
     TAG     =   'TAG'
     IF      =   'if'
+    DOT     =   '.'
+    FILTER  =   '|'
     ELIF    =   'elif'
     ELSE    =   'else'
     ENDIF   =   'endif'
@@ -47,13 +50,25 @@ class Lexer:
         while(self.currentChar != None and self.currentChar == ' '):
             self.next()
 
-    def expression(self):
+    def expression(self): #FIXME:
         self.next()
         self.next() #eat {{
         expr = ''
         while(self.currentChar != None and (self.currentChar.isalpha() or self.currentChar in ('.', '|',' '))):
             if(self.currentChar == ' '):
                 self.skipWhiteSpace()
+                continue
+            if(self.currentChar == '.'):
+                self.tokenList.append(Token(TokenType.EXPR,expr))
+                expr = ''
+                self.tokenList.append(Token(TokenType.DOT,'.'))
+                self.next()
+                continue
+            if(self.currentChar == '|'):
+                self.tokenList.append(Token(TokenType.EXPR,expr))
+                expr = ''
+                self.tokenList.append(Token(TokenType.FILTER,'|'))
+                self.next()
                 continue
             expr += self.currentChar
             self.next()

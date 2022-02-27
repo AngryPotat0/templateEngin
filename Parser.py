@@ -1,4 +1,6 @@
 from email.quoprimime import body_check
+from statistics import variance
+from unittest import result
 from Lexer import *
 from typing import List
 
@@ -23,11 +25,20 @@ class Literal(AST):
         return "Literal: " + self.text + "\n"
 
 class Expression(AST):
-    def __init__(self,name) -> None:
+    def __init__(self,name,subNameList,filterList) -> None:
         self.name = name
+        self.subNameList = subNameList
+        self.filterList = filterList
     
     def __str__(self) -> str:
-        return "Expression: " + self.name + "\n"
+        result = self.name
+        if(self.subNameList != []):
+            result += "."
+            result += ".".join(self.subNameList)
+        if(self.filterList != []):
+            result += " | "
+            result += " | ".join(self.filterList)
+        return "Expression: " + result + "\n"
 
 class FOR(AST):
     def __init__(self,var,iter,body) -> None:
@@ -80,13 +91,27 @@ class Parser:
     def expression(self): # 现在表达式只有变量名
         expression = self.currentToken.tokenValue
         self.eat(TokenType.EXPR)
-        return Expression(expression)
+        subNameList = []
+        while(self.currentToken.tokenType == TokenType.DOT):
+            self.eat(TokenType.DOT)
+            subNameList.append(self.currentToken.tokenValue)
+            self.eat(TokenType.EXPR)
+        filterList = []
+        while(self.currentToken.tokenType == TokenType.FILTER):
+            self.eat(TokenType.FILTER)
+            filterList.append(self.currentToken.tokenValue)
+            self.eat(TokenType.EXPR)
+        return Expression(expression,subNameList,filterList)
 
     def forLoop(self):
         self.eat(TokenType.FOR)
         var = self.expression()
+        if(var.subNameList != [] or var.filterList != []):
+            self.error("Var of For cannot have subName or Filter")
         self.eat(TokenType.IN)
         iters = self.expression()
+        if(iters.subNameList != [] or iters.filterList != []):
+            self.error("Iter of For cannot have subName or Filter")
         body = self.template()
         self.eat(TokenType.ENDFOR)
         return FOR(var,iters,body)

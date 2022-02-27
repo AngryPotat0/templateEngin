@@ -1,3 +1,4 @@
+from re import S
 from Parser import *
 
 class CodeBuilder:
@@ -32,6 +33,15 @@ class Compiler:
         self.code = CodeBuilder()
         self.varList = set()
         self.tempVarList = set()
+        self.buffer = []
+
+    def flush(self):
+        if(len(self.buffer) == 0): return
+        if(len(self.buffer) == 1):
+            self.code.addLine("result.append(%s)" % self.buffer[0])
+        else:
+            self.code.addLine("result.extend([%s])" % ",".join(self.buffer))
+        self.buffer = []
     
     def compile(self,ast):
         self.code.addLine("""def render_function(context):""")
@@ -48,15 +58,25 @@ class Compiler:
         self.code = CodeBuilder()
         self.varList = []
         return result
+    
+    def expression(self,node: Expression):
+        name = "c_{n}".format(n=node.name)
+        for subName in node.subNameList:
+            name += "['{n}']".format(n=subName)
+        for filter in node.filterList: #FIXME:
+            name = "{f}({n})".format(f=filter,n=name)
+        name = "str({n})".format(n=name)
+        return name
 
     def template(self,ast):
         for node in ast.nodeList:
             if(isinstance(node, Literal)):
-                self.code.addLine("""result.append(%s)""" % repr(node.text))
+                self.buffer.append(repr(node.text))
             if(isinstance(node, Expression)):
-                self.code.addLine("result.append(str(c_%s))" % node.name)
+                self.buffer.append(self.expression(node))
                 self.varList.add(node.name)
             if(isinstance(node,FOR)):
+                self.flush()
                 self.code.addLine("for c_{var} in c_{iter}:".format(var=node.var.name,iter=node.iter.name))
                 self.varList.add(node.var.name)
                 self.varList.add(node.iter.name)
@@ -64,3 +84,4 @@ class Compiler:
                 self.code.indent()
                 self.template(node.body)
                 self.code.dedent()
+        self.flush()
