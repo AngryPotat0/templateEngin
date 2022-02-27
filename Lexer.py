@@ -72,7 +72,7 @@ class Lexer:
         def addToken(word):
             if(word == ''): return
             if(word == 'for'):
-                self.tokenList.append(Token(TokenType.IF,word))
+                self.tokenList.append(Token(TokenType.FOR,word))
             elif(word == 'endfor'):
                 self.tokenList.append(Token(TokenType.ENDFOR,word))
             elif(word == 'in'):

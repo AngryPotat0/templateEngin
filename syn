@@ -33,4 +33,7 @@ literal     lis:
 expression  t
 endfor      endfor
 literal     </p>
-str expression str for
+
+template    str expression str for
+for         t topics body
+body        template
