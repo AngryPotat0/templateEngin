@@ -1,4 +1,7 @@
+from ast import Call
 from re import S
+
+from numpy import isin
 from Parser import *
 
 class CodeBuilder:
@@ -32,7 +35,7 @@ class Compiler:
     def __init__(self) -> None:
         self.code = CodeBuilder()
         self.varList = set()
-        self.tempVarList = set()
+        # self.tempVarList = set()
         self.buffer = []
 
     def flush(self):
@@ -49,9 +52,9 @@ class Compiler:
         section = self.code.addSection()
         self.code.addLine("result = []")
 
-        self.template(ast)
+        self.template(ast,[])
 
-        for var in self.varList - self.tempVarList:
+        for var in self.varList:
             section.addLine("c_{name} = context['{n}']".format(name=var,n=var))
         self.code.addLine("""return "".join(result)""")
         result = str(self.code)
@@ -68,20 +71,39 @@ class Compiler:
         name = "str({n})".format(n=name)
         return name
 
-    def template(self,ast):
+    def template(self,ast,tempVarList):
         for node in ast.nodeList:
             if(isinstance(node, Literal)):
                 self.buffer.append(repr(node.text))
             if(isinstance(node, Expression)):
                 self.buffer.append(self.expression(node))
-                self.varList.add(node.name)
+                if(node.name not in tempVarList): self.varList.add(node.name)
             if(isinstance(node,FOR)):
                 self.flush()
                 self.code.addLine("for c_{var} in c_{iter}:".format(var=node.var.name,iter=node.iter.name))
-                self.varList.add(node.var.name)
+                # self.varList.add(node.var.name)
                 self.varList.add(node.iter.name)
-                self.tempVarList.add(node.var.name)
+                # self.tempVarList.add(node.var.name)
+                tempVarList.append(node.var.name)
                 self.code.indent()
-                self.template(node.body)
+                self.template(node.body,tempVarList)
                 self.code.dedent()
+            if(isinstance(node,MACRO)):
+                self.flush()
+                name = node.macroName
+                valueList = ["c_" + value for value in node.valueList]
+                valueStr = ",".join(valueList)
+                self.code.addLine("def macro_{name}({lis}):".format(name=name,lis=valueStr))
+                self.code.indent()
+                self.template(node.macroBody,node.valueList)
+                self.code.dedent()
+            if(isinstance(node,CALL)):
+                self.flush()
+                macroName = node.name
+                lis = []
+                for value in node.valueList:
+                    if(value not in tempVarList): self.varList.add(value)
+                    lis.append("c_" + value)
+                valueStr = ",".join(lis)
+                self.code.addLine("macro_{name}({lis})".format(name=macroName,lis=valueStr))
         self.flush()

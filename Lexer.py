@@ -2,19 +2,26 @@ from cmath import exp
 from enum import Enum
 
 class TokenType(Enum):
-    LITERAL =   'LITERAL'
-    EXPR    =   'EXPR'
-    TAG     =   'TAG'
-    IF      =   'if'
-    DOT     =   '.'
-    FILTER  =   '|'
-    ELIF    =   'elif'
-    ELSE    =   'else'
-    ENDIF   =   'endif'
-    FOR     =   'for'
-    IN      =   'in'
-    ENDFOR  =   'endfor'
-    EOF     =   'EOF'
+    LITERAL     =   'LITERAL'
+    EXPR        =   'EXPR'
+    TAG         =   'TAG'
+    IF          =   'if'
+    DOT         =   '.'
+    FILTER      =   '|'
+    LPAREN      =   '('
+    RPAREN      =   ')'
+    COMMA       =   ','
+    ELIF        =   'elif'
+    ELSE        =   'else'
+    ENDIF       =   'endif'
+    FOR         =   'for'
+    IN          =   'in'
+    ENDFOR      =   'endfor'
+    MACRO       =   'macro'
+    ENDMACRO    =  'endmacro'
+    CALL        =   'call'
+    # ENDCALL     =   'endcall'
+    EOF         =   'EOF'
 
 
 class Token:
@@ -92,14 +99,32 @@ class Lexer:
                 self.tokenList.append(Token(TokenType.ENDFOR,word))
             elif(word == 'in'):
                 self.tokenList.append(Token(TokenType.IN,word))
+            elif(word == 'macro'):
+                self.tokenList.append(Token(TokenType.MACRO,word))
+            elif(word == 'endmacro'):
+                self.tokenList.append(Token(TokenType.ENDMACRO,word))
+            elif(word == 'call'):
+                self.tokenList.append(Token(TokenType.CALL,word))
+            # elif(word == 'endcall'):
+            #     self.tokenList.append(Token(TokenType.ENDCALL,word))
             else:
                 self.tokenList.append(Token(TokenType.EXPR,word))
 
-        while(self.currentChar != None and (self.currentChar.isalpha() or self.currentChar == ' ')):
-            if(self.currentChar == ' '):
-                addToken(temp)
-                temp = ''
-                self.skipWhiteSpace()
+        while(self.currentChar != None and (self.currentChar.isalpha() or self.currentChar in (' ','(',')',','))):
+            if(self.currentChar in (' ','(',')',',')):
+                if(temp != ''):
+                    addToken(temp)
+                    temp = ''
+                if(self.currentChar == '('):
+                    self.tokenList.append(Token(TokenType.LPAREN,'('))
+                elif(self.currentChar == ')'):
+                    self.tokenList.append(Token(TokenType.RPAREN,')'))
+                elif(self.currentChar == ','):
+                    self.tokenList.append(Token(TokenType.COMMA,','))
+                if(self.currentChar == ' '):
+                    self.skipWhiteSpace()
+                else:
+                    self.next()
                 continue
             temp += self.currentChar
             self.next()
@@ -108,6 +133,8 @@ class Lexer:
             self.next()
         else:
             raise Exception("Unexpected char at index {}\n".format(self.currentIndex))
+        if(self.currentChar == '\n'):
+            self.next()
 
     def literal(self):
         literal = ''

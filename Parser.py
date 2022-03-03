@@ -1,6 +1,7 @@
+# from unicodedata import name
 from email.quoprimime import body_check
-from statistics import variance
-from unittest import result
+from lib2to3.pgen2.token import NAME, RPAR
+from re import S
 from Lexer import *
 from typing import List
 
@@ -47,7 +48,26 @@ class FOR(AST):
         self.body = body
     
     def __str__(self) -> str:
-        return "For: " + str(self.var) + str(self.iter) + str(self.body)  + "END FOR\n"
+        return "For: " + str(self.var) + str(self.iter) + str(self.body)  + "END For\n"
+
+class MACRO(AST):
+    def __init__(self,macroName,valueList,macroBody) -> None:
+        self.macroName = macroName
+        self.valueList = valueList
+        self.macroBody = macroBody
+    
+    def __str__(self) -> str:
+        lis = "( " + ",".join(self.valueList) + " )"
+        return "Macro: " + str(self.macroName) + lis + str(self.macroBody) + "END Macro\n"
+
+class CALL(AST):
+    def __init__(self,name,valueList) -> None:
+        self.name = name
+        self.valueList = valueList
+    
+    def __str__(self) -> str:
+        lis = "( " + ",".join(self.valueList) + " )"
+        return "Call: " + str(self.name) + lis
 
 class Parser:
     def __init__(self,tokenList: List[Token]) -> None:
@@ -84,6 +104,12 @@ class Parser:
             elif(self.currentToken.tokenType == TokenType.FOR):
                 template.nodeList.append(self.forLoop())
                 continue
+            elif(self.currentToken.tokenType == TokenType.MACRO):
+                template.nodeList.append(self.macro())
+                continue
+            elif(self.currentToken.tokenType == TokenType.CALL):
+                template.nodeList.append(self.call())
+                continue
             else:
                 break
         return template
@@ -115,3 +141,42 @@ class Parser:
         body = self.template()
         self.eat(TokenType.ENDFOR)
         return FOR(var,iters,body)
+
+    def macro(self):
+        self.eat(TokenType.MACRO)
+        macroName = self.currentToken.tokenValue
+        valueList = []
+        self.eat(TokenType.EXPR)
+        self.eat(TokenType.LPAREN)
+        if(self.currentToken.tokenType == TokenType.RPAREN):
+            self.eat(TokenType.RPAREN)
+        else:
+            valueList.append(self.currentToken.tokenValue)
+            self.eat(TokenType.EXPR)
+            while(self.currentToken.tokenType == TokenType.COMMA):
+                self.eat(TokenType.COMMA)
+                valueList.append(self.currentToken.tokenValue)
+                self.eat(TokenType.EXPR)
+            self.eat(TokenType.RPAREN)
+        #body
+        body = self.template()
+        self.eat(TokenType.ENDMACRO)
+        return MACRO(macroName,valueList,body)
+
+    def call(self):
+        self.eat(TokenType.CALL)
+        name = self.currentToken.tokenValue
+        valueList = []
+        self.eat(TokenType.EXPR)
+        self.eat(TokenType.LPAREN)
+        if(self.currentToken.tokenType == TokenType.RPAREN):
+            self.eat(TokenType.RPAREN)
+        else:
+            valueList.append(self.currentToken.tokenValue)
+            self.eat(TokenType.EXPR)
+            while(self.currentToken.tokenType == TokenType.COMMA):
+                self.eat(TokenType.COMMA)
+                valueList.append(self.currentToken.tokenValue)
+                self.eat(TokenType.EXPR)
+            self.eat(TokenType.RPAREN)
+        return CALL(name,valueList)

@@ -11,14 +11,5 @@
 # t = "12"
 # print("""result.append(%s)""" % repr(t))
 
-code = """
-def render_function(context):
-    c_viewsDict = context['viewsDict']
-    result = []
-    result.extend(['<p>',str(c_viewsDict),'</p>\n<p>',str(abs(c_viewsDict['name'])),'</p>\n'])
-    return "".join(result)
-"""
-
-functions = {}
-exec(code,functions)
-print(functions)
+lis = []
+print(",".join(lis))

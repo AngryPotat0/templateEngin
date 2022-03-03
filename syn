@@ -43,3 +43,8 @@ def render_function(context):
     result.append("<p>TOpic....")
     result.append(str(c_name))
     result.append
+
+
+    {% macro showProduct(product) %}
+    <li>{{ product.name }}: {{ product.price }}</li>
+    {% endmacro %}
