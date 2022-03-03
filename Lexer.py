@@ -86,6 +86,16 @@ class Lexer:
             raise Exception("Unexpected char at index {}\n".format(self.currentIndex))
         self.tokenList.append(Token(TokenType.EXPR,expr))
 
+    def note(self):
+        self.next()
+        self.next() #eat {#
+        while(self.currentChar != None and (self.currentChar != '#' or self.peek() != '}')):
+            if(self.currentChar == '\\'):
+                self.next()
+            self.next()
+        self.next()
+        self.next()
+
     def tag(self):
         self.next()
         self.next() #eat {%
@@ -163,6 +173,8 @@ class Lexer:
                     self.expression()
                 elif(nextChar == '%'): #tag
                     self.tag()
+                elif(nextChar == '#'): #注释
+                    self.note()
                 else:
                     raise Exception("Unexpected char at index {}".format(self.currentIndex + 1))
             self.literal()
