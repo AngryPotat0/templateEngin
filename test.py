@@ -11,5 +11,5 @@
 # t = "12"
 # print("""result.append(%s)""" % repr(t))
 
-lis = []
-print(",".join(lis))
+a = "0"
+print(a.isdigit())

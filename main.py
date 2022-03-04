@@ -33,12 +33,10 @@ template = '''
 <p>Welcome, {{userName}}!</p>
 <p>Products:</p>
 <ul>
-{#sdvjksdvsdvnsdf
-fbdfbdf
-#}
 {% for product in productList %}
     {% call showProduct(product) %}
 {% endfor %}
+{% call showProduct(productList.0)%}
 </ul>
 '''
 

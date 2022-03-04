@@ -61,7 +61,7 @@ class Lexer:
         self.next()
         self.next() #eat {{
         expr = ''
-        while(self.currentChar != None and (self.currentChar.isalpha() or self.currentChar in ('.', '|',' '))):
+        while(self.currentChar != None and (self.currentChar.isalpha() or self.currentChar.isdigit() or self.currentChar in ('.', '|',' '))):
             if(self.currentChar == ' '):
                 self.skipWhiteSpace()
                 continue
@@ -83,7 +83,7 @@ class Lexer:
             self.next()
             self.next()
         else:
-            raise Exception("Unexpected char at index {}\n".format(self.currentIndex))
+            raise Exception("Unexpected char {a} at index {b}\n".format(a=self.currentChar,b=self.currentIndex))
         self.tokenList.append(Token(TokenType.EXPR,expr))
 
     def note(self):
@@ -120,8 +120,8 @@ class Lexer:
             else:
                 self.tokenList.append(Token(TokenType.EXPR,word))
 
-        while(self.currentChar != None and (self.currentChar.isalpha() or self.currentChar in (' ','(',')',','))):
-            if(self.currentChar in (' ','(',')',',')):
+        while(self.currentChar != None and (self.currentChar.isalpha() or self.currentChar.isdigit() or self.currentChar in (' ','(',')',',','.'))):
+            if(self.currentChar in (' ','(',')',',','.')):
                 if(temp != ''):
                     addToken(temp)
                     temp = ''
@@ -131,6 +131,8 @@ class Lexer:
                     self.tokenList.append(Token(TokenType.RPAREN,')'))
                 elif(self.currentChar == ','):
                     self.tokenList.append(Token(TokenType.COMMA,','))
+                elif(self.currentChar == '.'):
+                    self.tokenList.append(Token(TokenType.DOT,'.'))
                 if(self.currentChar == ' '):
                     self.skipWhiteSpace()
                 else:
@@ -142,7 +144,7 @@ class Lexer:
             self.next()
             self.next()
         else:
-            raise Exception("Unexpected char at index {}\n".format(self.currentIndex))
+            raise Exception("Unexpected char {} at index {}\n".format(self.currentChar,self.currentIndex))
         if(self.currentChar == '\n'):
             self.next()
 

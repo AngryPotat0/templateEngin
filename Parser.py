@@ -114,7 +114,7 @@ class Parser:
                 break
         return template
 
-    def expression(self): # 现在表达式只有变量名
+    def expression(self,allowFilter=True): # 现在表达式只有变量名
         expression = self.currentToken.tokenValue
         self.eat(TokenType.EXPR)
         subNameList = []
@@ -123,10 +123,11 @@ class Parser:
             subNameList.append(self.currentToken.tokenValue)
             self.eat(TokenType.EXPR)
         filterList = []
-        while(self.currentToken.tokenType == TokenType.FILTER):
-            self.eat(TokenType.FILTER)
-            filterList.append(self.currentToken.tokenValue)
-            self.eat(TokenType.EXPR)
+        if(allowFilter):
+            while(self.currentToken.tokenType == TokenType.FILTER):
+                self.eat(TokenType.FILTER)
+                filterList.append(self.currentToken.tokenValue)
+                self.eat(TokenType.EXPR)
         return Expression(expression,subNameList,filterList)
 
     def forLoop(self):
@@ -172,11 +173,9 @@ class Parser:
         if(self.currentToken.tokenType == TokenType.RPAREN):
             self.eat(TokenType.RPAREN)
         else:
-            valueList.append(self.currentToken.tokenValue)
-            self.eat(TokenType.EXPR)
+            valueList.append(self.expression(False))
             while(self.currentToken.tokenType == TokenType.COMMA):
                 self.eat(TokenType.COMMA)
-                valueList.append(self.currentToken.tokenValue)
-                self.eat(TokenType.EXPR)
+                valueList.append(self.expression(False))
             self.eat(TokenType.RPAREN)
         return CALL(name,valueList)

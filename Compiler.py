@@ -1,7 +1,3 @@
-from ast import Call
-from re import S
-
-from numpy import isin
 from Parser import *
 
 class CodeBuilder:
@@ -62,13 +58,16 @@ class Compiler:
         self.varList = []
         return result
     
-    def expression(self,node: Expression):
+    def expression(self,node: Expression,toStr=True):
         name = "c_{n}".format(n=node.name)
         for subName in node.subNameList:
-            name += "['{n}']".format(n=subName)
+            if(subName.isdigit()):
+                name += "[{n}]".format(n=subName)
+            else:
+                name += "['{n}']".format(n=subName)
         for filter in node.filterList: #FIXME:
             name = "{f}({n})".format(f=filter,n=name)
-        name = "str({n})".format(n=name)
+        if(toStr): name = "str({n})".format(n=name)
         return name
 
     def template(self,ast,tempVarList):
@@ -102,8 +101,8 @@ class Compiler:
                 macroName = node.name
                 lis = []
                 for value in node.valueList:
-                    if(value not in tempVarList): self.varList.add(value)
-                    lis.append("c_" + value)
+                    if(value.name not in tempVarList): self.varList.add(value.name)
+                    lis.append(self.expression(value,False))
                 valueStr = ",".join(lis)
                 self.code.addLine("macro_{name}({lis})".format(name=macroName,lis=valueStr))
         self.flush()
