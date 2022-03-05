@@ -43,7 +43,7 @@ class Compiler:
         self.buffer = []
     
     def compile(self,ast):
-        self.code.addLine("""def render_function(context):""")
+        self.code.addLine("""def render_function(context,library):""")
         self.code.indent()
         section = self.code.addSection()
         self.code.addLine("result = []")
@@ -66,7 +66,7 @@ class Compiler:
             else:
                 name += "['{n}']".format(n=subName)
         for filter in node.filterList: #FIXME:
-            name = "{f}({n})".format(f=filter,n=name)
+            name = "library.filter['{f}']({n})".format(f=filter,n=name)
         if(toStr): name = "str({n})".format(n=name)
         return name
 

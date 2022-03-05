@@ -2,10 +2,20 @@ from Lexer import *
 from Parser import *
 from Compiler import *
 
+
+class Library:
+    def __init__(self) -> None:
+        self.filter = dict()
+        self.filter['len'] = len
+    
+    def registerFilter(self,name,func):
+        self.filter[name] = func
+
 class Render:
-    def __init__(self,template) -> None:
+    def __init__(self,template,library=None) -> None:
         self.template = template
         self.render_functon = ""
+        self.library = library
 
     def compile(self):
         lex = Lexer(self.template)
@@ -23,12 +33,12 @@ class Render:
             return None
         functions = {}
         exec(self.render_functon,functions)
-        return functions["render_function"](context)
+        return functions["render_function"](context,self.library)
 
 
 template = '''
 {% macro showProduct(product) %}
-<li>{{ product.name }}: {{ product.price }}</li>
+<li>{{ product.name | addN | len }}: {{ product.price | doubleMe }}</li>
 {% endmacro %}
 <p>Welcome, {{userName}}!</p>
 <p>Products:</p>
@@ -43,7 +53,14 @@ template = '''
 productList = [{"name":"book","price":12},{"name":"computer","price":6500},{"name":"phone","price":2500}]
 context = {"userName":"angryPotato","productList":productList}
 
-render = Render(template)
+addN = lambda x: x + "NNN"
+doubleMe = lambda x: x * 2
+
+library = Library()
+library.registerFilter('addN',addN)
+library.registerFilter("doubleMe",doubleMe)
+
+render = Render(template,library)
 render.compile()
 html = render.render(context)
 print(html)

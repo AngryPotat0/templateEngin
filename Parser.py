@@ -1,7 +1,3 @@
-# from unicodedata import name
-from email.quoprimime import body_check
-from lib2to3.pgen2.token import NAME, RPAR
-from re import S
 from Lexer import *
 from typing import List
 
