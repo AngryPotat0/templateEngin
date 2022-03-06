@@ -29,16 +29,26 @@ class Render:
         print(self.render_functon)
 
     def render(self,context):
+        def do_dots(value,*args):
+            for dot in args:
+                try:
+                    value = getattr(value,dot)
+                except AttributeError:
+                    value = value[int(dot)] if dot.isdigit() else value[dot]
+                if(callable(value)):
+                    value = value()
+            return value
+        
         if(self.render_functon == ''):
             return None
         functions = {}
         exec(self.render_functon,functions)
-        return functions["render_function"](context,self.library)
+        return functions["render_function"](context,self.library,do_dots)
 
 
 template = '''
 {% macro showProduct(product) %}
-<li>{{ product.name | addN | len }}: {{ product.price | doubleMe }}</li>
+<li>{{ product.name }}: {{ product.price | doubleMe }}</li>
 {% endmacro %}
 <p>Welcome, {{userName}}!</p>
 <p>Products:</p>
@@ -50,8 +60,25 @@ template = '''
 </ul>
 '''
 
-productList = [{"name":"book","price":12},{"name":"computer","price":6500},{"name":"phone","price":2500}]
+productList = [{"name":"book","price":12},{"name":"cup","price":22},{"name":"keyboard","price":530}]
 context = {"userName":"angryPotato","productList":productList}
+
+# template = '''
+# {% macro showProduct(a) %}
+# <li>{{ a }}</li>
+# {% endmacro %}
+# <p>Welcome, {{userName}}!</p>
+# <p>Products:</p>
+# <ul>
+# {% for productKey in productList.keys %}
+#     {% call showProduct(productKey) %}
+# {% endfor %}
+# </ul>
+# '''
+
+
+# productList = {"name":"book","price":12,"palce":"home","tag":"useless"}
+# context = {"userName":"angryPotato","productList":productList}
 
 addN = lambda x: x + "NNN"
 doubleMe = lambda x: x * 2

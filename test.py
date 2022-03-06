@@ -10,6 +10,5 @@
 # print(global_namespace['three']())
 # t = "12"
 # print("""result.append(%s)""" % repr(t))
-
-a = "0"
-print(a.isdigit())
+lis = {"a":1,"b":2}
+print(getattr(lis, "keys"))

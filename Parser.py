@@ -133,7 +133,7 @@ class Parser:
             self.error("Var of For cannot have subName or Filter")
         self.eat(TokenType.IN)
         iters = self.expression()
-        if(iters.subNameList != [] or iters.filterList != []):
+        if(iters.filterList != []):
             self.error("Iter of For cannot have subName or Filter")
         body = self.template()
         self.eat(TokenType.ENDFOR)
