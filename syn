@@ -1,17 +1,24 @@
 insert data:
 {{name}}
 
+expression: name[.subname]*[| filter]*
+
+boolOP:
+    expression
+    boolOP [== | >= | <= | and | or ] boolOP
+    not boolOP
+
 <!-- use filter:
 {{story.subject | lowerCase}} => lowerCase(story.subject) -->
 
-<!-- if statement:
+if statement:
 {% if ... %}
     ...
 {% elif ... %} // 可选
     ...
 {% else %} // 可选
     ...
-{% endif %} -->
+{% endif %}
 
 for statement:
 {% for var in list%}
@@ -48,3 +55,7 @@ def render_function(context):
     {% macro showProduct(product) %}
     <li>{{ product.name }}: {{ product.price }}</li>
     {% endmacro %}
+
+{% extends file_name %}
+
+{% block block_name %} {% endblock %}

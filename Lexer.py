@@ -4,24 +4,43 @@ class TokenType(Enum):
     LITERAL     =   'LITERAL'
     EXPR        =   'EXPR'
     TAG         =   'TAG'
-    IF          =   'if'
-    DOT         =   '.'
     FILTER      =   '|'
+    DOT         =   '.'
     LPAREN      =   '('
     RPAREN      =   ')'
     COMMA       =   ','
+    EQUAL       =   'eqa'
+    GT          =   'gt'
+    LT          =   'lt'
+    GTE         =   'gte'
+    LTE         =   'lte'
+    AND         =   'and'
+    OR          =   'or'
+    Not         =   'not'
     ELIF        =   'elif'
+    IF          =   'if'
     ELSE        =   'else'
     ENDIF       =   'endif'
     FOR         =   'for'
     IN          =   'in'
     ENDFOR      =   'endfor'
     MACRO       =   'macro'
-    ENDMACRO    =  'endmacro'
+    ENDMACRO    =   'endmacro'
     CALL        =   'call'
-    # ENDCALL     =   'endcall'
+    BLOCK       =   'block'
+    ENDBLOCK    =   'endblock'
+    EXTENDS     =   'extends'
     EOF         =   'EOF'
 
+def reserved_keywords():
+    token_list = list(TokenType)
+    start = token_list.index(TokenType.EQUAL)
+    end = token_list.index(TokenType.EOF)
+    reserved_keywords = {
+        token_type.value : token_type
+        for token_type in token_list[start:end]
+    }
+    return reserved_keywords
 
 class Token:
     def __init__(self, tokenType, tokenValue) -> None:
@@ -38,6 +57,7 @@ class Lexer:
         self.currentChar = self.text[self.currentIndex]
         self.lenOfText = len(text)
         self.tokenList = []
+        self.reserved_keywords = reserved_keywords()
 
     def next(self):
         self.currentIndex += 1
@@ -102,20 +122,8 @@ class Lexer:
 
         def addToken(word):
             if(word == ''): return
-            if(word == 'for'):
-                self.tokenList.append(Token(TokenType.FOR,word))
-            elif(word == 'endfor'):
-                self.tokenList.append(Token(TokenType.ENDFOR,word))
-            elif(word == 'in'):
-                self.tokenList.append(Token(TokenType.IN,word))
-            elif(word == 'macro'):
-                self.tokenList.append(Token(TokenType.MACRO,word))
-            elif(word == 'endmacro'):
-                self.tokenList.append(Token(TokenType.ENDMACRO,word))
-            elif(word == 'call'):
-                self.tokenList.append(Token(TokenType.CALL,word))
-            # elif(word == 'endcall'):
-            #     self.tokenList.append(Token(TokenType.ENDCALL,word))
+            if(word in self.reserved_keywords):
+                self.tokenList.append(Token(self.reserved_keywords[word],word))
             else:
                 self.tokenList.append(Token(TokenType.EXPR,word))
 
