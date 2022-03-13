@@ -2,6 +2,7 @@ from enum import Enum
 
 class TokenType(Enum):
     LITERAL     =   'LITERAL'
+    NUM         =   'Num'
     EXPR        =   'EXPR'
     TAG         =   'TAG'
     FILTER      =   '|'
@@ -10,13 +11,14 @@ class TokenType(Enum):
     RPAREN      =   ')'
     COMMA       =   ','
     EQUAL       =   'eqa'
+    NOTEQUAL    =   'neqa'
     GT          =   'gt'
     LT          =   'lt'
     GTE         =   'gte'
     LTE         =   'lte'
     AND         =   'and'
     OR          =   'or'
-    Not         =   'not'
+    NOT         =   'not'
     ELIF        =   'elif'
     IF          =   'if'
     ELSE        =   'else'
@@ -125,8 +127,11 @@ class Lexer:
             if(word in self.reserved_keywords):
                 self.tokenList.append(Token(self.reserved_keywords[word],word))
             else:
+                #if(word.isdigit()):
+                #    self.tokenList.append(Token(TokenType.NUM,word))
+                #else:
+                #    self.tokenList.append(Token(TokenType.EXPR,word))
                 self.tokenList.append(Token(TokenType.EXPR,word))
-
         while(self.currentChar != None and (self.currentChar.isalpha() or self.currentChar.isdigit() or self.currentChar in (' ','(',')',',','.'))):
             if(self.currentChar in (' ','(',')',',','.')):
                 if(temp != ''):

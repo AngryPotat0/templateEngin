@@ -19,11 +19,11 @@ class Render:
 
     def compile(self):
         lex = Lexer(self.template)
-        # for token in lex.lexer():
-        #     print(str(token))
+        for token in lex.lexer():
+            print(str(token))
         p = Parser(lex.lexer())
         ast = p.parser()
-        # print(str(ast))
+        print(str(ast))
         compiler = Compiler()
         self.render_functon = compiler.compile(ast)
         print(self.render_functon)
@@ -52,6 +52,13 @@ template = '''
 {% endmacro %}
 <p>Welcome, {{userName}}!</p>
 <p>Products:</p>
+{% if age gte 20 %}
+<p>Age={{age}}</p>
+{% elif age gte 10 %}
+<p>ok,{{age}}</p>
+{% else %}
+<P>Age less 20</p>
+{% endif %}
 <ul>
 {% for product in productList %}
     {% call showProduct(product) %}
@@ -61,7 +68,7 @@ template = '''
 '''
 
 productList = [{"name":"book","price":12},{"name":"cup","price":22},{"name":"keyboard","price":530}]
-context = {"userName":"angryPotato","productList":productList}
+context = {"userName":"angryPotato","age":15,"productList":productList}
 
 # template = '''
 # {% macro showProduct(a) %}

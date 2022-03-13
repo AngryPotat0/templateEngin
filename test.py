@@ -12,3 +12,6 @@
 # print("""result.append(%s)""" % repr(t))
 #lis = {"a":1,"b":2}
 #print(getattr(lis, "keys"))
+
+a = "123.45"
+print(a.isdigit())

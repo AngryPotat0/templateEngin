@@ -21,6 +21,13 @@ class Literal(AST):
     def __str__(self) -> str:
         return "Literal: " + self.text + "\n"
 
+class Num(AST):
+    def __init__(self,val) -> None:
+        self.val = val
+
+    def __str__(self) -> str:
+        return str(self.val)
+
 class Expression(AST):
     def __init__(self,name,subNameList,filterList) -> None:
         self.name = name
@@ -36,6 +43,34 @@ class Expression(AST):
             result += " | "
             result += " | ".join(self.filterList)
         return "Expression: " + result + "\n"
+
+class IF(AST):
+    def __init__(self,boolBlocks,elseBlock):
+        self.boolBlocks = boolBlocks
+        self.elseBlock = elseBlock
+
+    def __str__(self) -> str:
+        pairs = ["statement::" + str(block[0]) + "::\nblock:" + str(block[1]) for block in self.boolBlocks]
+        return "IF: " + "\n".join(pairs) + "\n"
+
+class BEXPR(AST):
+    #def __init__(self,op,left,right):
+    #    self.op = op
+    #    self.left = left
+    #    self.right = right
+    def __init__(self,nameList):
+        self.nameList = nameList
+    
+    def __str__(self) -> str:
+        return " ".join([str(name) for name in self.nameList])
+
+class UNARY(AST):
+    def __init__(self,op,expr):
+        self.op = op
+        self.expr = expr
+
+    def __str__(self):
+        return op + ":" + str(expr)
 
 class FOR(AST):
     def __init__(self,var,iter,body) -> None:
@@ -62,7 +97,8 @@ class CALL(AST):
         self.valueList = valueList
     
     def __str__(self) -> str:
-        lis = "( " + ",".join(self.valueList) + " )"
+        print("CALL TEST::",self.valueList)
+        lis = "( " + ",".join([str(name.name) for name in self.valueList]) + " )"
         return "Call: " + str(self.name) + lis
 
 class Parser:
@@ -76,7 +112,7 @@ class Parser:
 
     def eat(self,tokenType):
         if(self.currentToken.tokenType != tokenType):
-            self.error("Parser Error: Unexpected token {}".format(self.currentToken.tokenValue))
+            self.error("Parser Error: Unexpected token {} with value {}".format(self.currentToken.tokenType,self.currentToken.tokenValue))
         else:
             self.currentIndex += 1
             self.currentToken = self.tokenList[self.currentIndex]
@@ -99,6 +135,9 @@ class Parser:
                 continue
             elif(self.currentToken.tokenType == TokenType.FOR):
                 template.nodeList.append(self.forLoop())
+                continue
+            elif(self.currentToken.tokenType == TokenType.IF):
+                template.nodeList.append(self.ifStatement())
                 continue
             elif(self.currentToken.tokenType == TokenType.MACRO):
                 template.nodeList.append(self.macro())
@@ -126,6 +165,11 @@ class Parser:
                 self.eat(TokenType.EXPR)
         return Expression(expression,subNameList,filterList)
 
+    def num(self):
+        val = self.currentToken.tokenValue
+        self.eat(TokenType.NUM)
+        return Num(int(val))
+
     def forLoop(self):
         self.eat(TokenType.FOR)
         var = self.expression()
@@ -138,6 +182,94 @@ class Parser:
         body = self.template()
         self.eat(TokenType.ENDFOR)
         return FOR(var,iters,body)
+
+    def boolExpr(self):
+        #node = self.levelAnd()
+        #while(self.currentToken.tokenType == TokenType.OR):
+        #    op = self.currentToken.tokenValue
+        #    self.eat(TokenType.OR)
+        #    node = BEXPR(op,node,self.levelAnd())
+        #return node
+        statement = []
+        allowToken = {TokenType.LPAREN,TokenType.RPAREN,TokenType.NOT,TokenType.GT,TokenType.LT,TokenType.GTE,TokenType.LTE,TokenType.EQUAL,TokenType.NOTEQUAL,TokenType.AND,TokenType.OR}
+        while(self.currentToken.tokenType == TokenType.EXPR or self.currentToken.tokenType in allowToken):
+            if(self.currentToken.tokenType == TokenType.EXPR):
+                statement.append(self.expression(allowFilter=False))
+            else:
+                statement.append(self.currentToken.tokenValue)
+                self.eat(self.currentToken.tokenType)
+        return BEXPR(statement)
+
+    def levelAnd(self):
+        node = self.level_EQA()
+        while(self.currentToken.tokenType == TokenType.AND):
+            op = self.currentToken.tokenValue
+            self.eat(TokenType.AND)
+            node = BEXPR(op,node,self.level_EQA())
+        return node
+
+    def level_EQA(self):
+        node = self.level_GLE()
+        while(self.currentToken.tokenType in (TokenType.EQUAL, TokenType.NOTEQUAL)):
+            op = self.currentToken.tokenValue
+            if(self.currentToken.tokenType == TokenType.EQUAL):
+                self.eat(TokenType.EQUAL)
+            else:
+                self.eat(TokenType.NOTEQUAL)
+            node = BEXPR(op,node,self.level_GLE)
+        return node
+
+    def level_GLE(self):
+        node = self.factor()
+        while(self.currentToken.tokenType in (TokenType.GT,TokenType.LT,TokenType.GTE,TokenType.LTE)):
+            op = self.currentToken.tokenValue
+            if(self.currentToken.tokenType == TokenType.GT):
+                self.eat(TokenType.GT)
+            elif(self.currentToken.tokenType == TokenType.LT):
+                self.eat(TokenType.LT)
+            elif(self.currentToken.tokenType == TokenType.GTE):
+                self.eat(TokenType.GTE)
+            else:
+                self.eat(TokenType.LTE)
+            node = BEXPR(op,node,self.factor())
+        return node
+
+    def factor(self):
+        if(self.currentToken.tokenType == TokenType.LPAREN):
+            self.eat(TokenType.LPAREN)
+            node = self.boolExpr()
+            self.eat(TokenType.RPAREN)
+            return node
+        elif(self.currentToken.tokenType == TokenType.NOT):
+            op = self.currentToken.tokenValue
+            self.eat(TokenType.NOT)
+            node = UNARY(op,self.boolExpr())
+            return node
+        else:
+            #if(self.currentToken.tokenType == TokenType.EXPR):
+            #    node = self.expression(allowFilter=False)
+            #else:
+            #    node = self.num()
+            node = self.expression(allowFilter=False)
+            return node
+
+    def ifStatement(self):
+        self.eat(TokenType.IF)
+        boolBlock = list()
+        elseBlock = None
+        bExpr = self.boolExpr()
+        block = self.template()
+        boolBlock.append((bExpr,block))
+        while(self.currentToken.tokenType == TokenType.ELIF):
+            self.eat(TokenType.ELIF)
+            bExpr = self.boolExpr()
+            block = self.template()
+            boolBlock.append((bExpr,block))
+        if(self.currentToken.tokenType == TokenType.ELSE):
+            self.eat(TokenType.ELSE)
+            elseBlock = self.template()
+        self.eat(TokenType.ENDIF)
+        return IF(boolBlock,elseBlock)
 
     def macro(self):
         self.eat(TokenType.MACRO)

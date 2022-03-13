@@ -59,6 +59,7 @@ class Compiler:
         return result
     
     def expression(self,node: Expression,toStr=True):
+        if(node.name.isdigit()): return node.name
         name = "c_{n}".format(n=node.name)
         # for subName in node.subNameList:
         #     if(subName.isdigit()):
@@ -72,6 +73,18 @@ class Compiler:
             name = "library.filter['{f}']({n})".format(f=filter,n=name)
         if(toStr): name = "str({n})".format(n=name)
         return name
+
+    def boolExpr(self,node):
+        op_dict = {"gt":" > ","lt":" < ","gte":" >= ","lte":" <= ","eqa":" == ","neqa":" != ","and":" and ","or":" or ","not":"not ","(":"(",")":")"}
+        statement = node.nameList
+        ret = ""
+        for name in statement:
+            if(isinstance(name,Expression)):
+                ret = ret + self.expression(name,toStr=False)
+            else:
+                name = op_dict[name]
+                ret += name
+        return ret
 
     def template(self,ast,tempVarList):
         for node in ast.nodeList:
@@ -90,6 +103,26 @@ class Compiler:
                 self.code.indent()
                 self.template(node.body,tempVarList)
                 self.code.dedent()
+            if(isinstance(node, IF)):
+                self.flush()
+                blockList = node.boolBlocks
+                i = 0
+                for block in blockList:
+                    statement = block[0]
+                    content = block[1]
+                    if(i == 0):
+                        self.code.addLine("if {}:".format(self.boolExpr(statement)))
+                    else:
+                        self.code.addLine("elif {}:".format(self.boolExpr(statement)))
+                    i += 1
+                    self.code.indent()
+                    self.template(content,tempVarList)
+                    self.code.dedent()
+                if(node.elseBlock != None):
+                    self.code.addLine("else:")
+                    self.code.indent()
+                    self.template(node.elseBlock,tempVarList)
+                    self.code.dedent()
             if(isinstance(node,MACRO)):
                 self.flush()
                 name = node.macroName
