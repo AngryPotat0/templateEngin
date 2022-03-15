@@ -70,7 +70,7 @@ class UNARY(AST):
         self.expr = expr
 
     def __str__(self):
-        return op + ":" + str(expr)
+        return self.op + ":" + str(self.expr)
 
 class FOR(AST):
     def __init__(self,var,iter,body) -> None:
@@ -184,12 +184,6 @@ class Parser:
         return FOR(var,iters,body)
 
     def boolExpr(self):
-        #node = self.levelAnd()
-        #while(self.currentToken.tokenType == TokenType.OR):
-        #    op = self.currentToken.tokenValue
-        #    self.eat(TokenType.OR)
-        #    node = BEXPR(op,node,self.levelAnd())
-        #return node
         statement = []
         allowToken = {TokenType.LPAREN,TokenType.RPAREN,TokenType.NOT,TokenType.GT,TokenType.LT,TokenType.GTE,TokenType.LTE,TokenType.EQUAL,TokenType.NOTEQUAL,TokenType.AND,TokenType.OR}
         while(self.currentToken.tokenType == TokenType.EXPR or self.currentToken.tokenType in allowToken):
@@ -199,59 +193,6 @@ class Parser:
                 statement.append(self.currentToken.tokenValue)
                 self.eat(self.currentToken.tokenType)
         return BEXPR(statement)
-
-    def levelAnd(self):
-        node = self.level_EQA()
-        while(self.currentToken.tokenType == TokenType.AND):
-            op = self.currentToken.tokenValue
-            self.eat(TokenType.AND)
-            node = BEXPR(op,node,self.level_EQA())
-        return node
-
-    def level_EQA(self):
-        node = self.level_GLE()
-        while(self.currentToken.tokenType in (TokenType.EQUAL, TokenType.NOTEQUAL)):
-            op = self.currentToken.tokenValue
-            if(self.currentToken.tokenType == TokenType.EQUAL):
-                self.eat(TokenType.EQUAL)
-            else:
-                self.eat(TokenType.NOTEQUAL)
-            node = BEXPR(op,node,self.level_GLE)
-        return node
-
-    def level_GLE(self):
-        node = self.factor()
-        while(self.currentToken.tokenType in (TokenType.GT,TokenType.LT,TokenType.GTE,TokenType.LTE)):
-            op = self.currentToken.tokenValue
-            if(self.currentToken.tokenType == TokenType.GT):
-                self.eat(TokenType.GT)
-            elif(self.currentToken.tokenType == TokenType.LT):
-                self.eat(TokenType.LT)
-            elif(self.currentToken.tokenType == TokenType.GTE):
-                self.eat(TokenType.GTE)
-            else:
-                self.eat(TokenType.LTE)
-            node = BEXPR(op,node,self.factor())
-        return node
-
-    def factor(self):
-        if(self.currentToken.tokenType == TokenType.LPAREN):
-            self.eat(TokenType.LPAREN)
-            node = self.boolExpr()
-            self.eat(TokenType.RPAREN)
-            return node
-        elif(self.currentToken.tokenType == TokenType.NOT):
-            op = self.currentToken.tokenValue
-            self.eat(TokenType.NOT)
-            node = UNARY(op,self.boolExpr())
-            return node
-        else:
-            #if(self.currentToken.tokenType == TokenType.EXPR):
-            #    node = self.expression(allowFilter=False)
-            #else:
-            #    node = self.num()
-            node = self.expression(allowFilter=False)
-            return node
 
     def ifStatement(self):
         self.eat(TokenType.IF)
