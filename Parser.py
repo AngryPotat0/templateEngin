@@ -14,6 +14,14 @@ class Template(AST):
             ans += str(node)
         return ans + "\n"
 
+class Block(AST):
+    def __init__(self,blockName,template):
+        self.blockName = blockName
+        self.template = template
+    
+    def __str__(self) -> str:
+        return "Block:" + self.blockName + "\n" + str(self.template)
+
 class Literal(AST):
     def __init__(self,text) -> None:
         self.text = text
@@ -145,9 +153,21 @@ class Parser:
             elif(self.currentToken.tokenType == TokenType.CALL):
                 template.nodeList.append(self.call())
                 continue
+            elif(self.currentToken.tokenType == TokenType.BLOCK):
+                template.nodeList.append(self.block())
+                continue
             else:
                 break
         return template
+
+    def block(self):
+        self.eat(TokenType.BLOCK)
+        blockName = self.currentToken.tokenValue
+        self.eat(TokenType.EXPR)
+        template = self.template()
+        self.eat(TokenType.ENDBLOCK)
+        return Block(blockName,template)
+        
 
     def expression(self,allowFilter=True): # 现在表达式只有变量名
         expression = self.currentToken.tokenValue

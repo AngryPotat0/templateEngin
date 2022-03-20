@@ -2,37 +2,66 @@ from Parser import *
 
 class CodeBuilder:
     def __init__(self,level = 0) -> None:
-        self.code = []
-        self.level = level
+        self.functionList = dict()
+        self.functionList['render'] = {"indent_level":0,"function":[]}
+        self.code = self.functionList['render']
+        self.code["indent_level"] = level
     
+    def switchFunction(self,functionName):
+        if(functionName not in self.functionList):
+            self.functionList[functionName] = {"indent_level":0,"function":[]}
+        self.code = self.functionList[functionName]
+
     def addLine(self, line):
-        self.code.append(" " * self.level + line + "\n")
+        self.code["function"].append(" " * self.code["indent_level"] + line + "\n")
     
     def indent(self):
-        self.level += 4
-    
+        #self.level += 4
+        self.code["indent_level"] += 4
+
     def dedent(self):
-        self.level -= 4
-    
+        #self.level -= 4
+        self.code["indent_level"] -= 4
+
     def addSection(self):
-        section = CodeBuilder(self.level)
-        self.code.append(section)
+        section = CodeBuilder(self.code["indent_level"])
+        self.code["function"].append(section)
         return section
 
     def getCode(self):
-        if(self.level != 0):
-            return None
+        for functionName in self.functionList:
+            if(self.functionList[functionName]["indent_level"] != 0):
+                raise Exception("CodeBuilder: function " + functionName + "'s indent level is not 0")
         return str(self)
     
     def __str__(self) -> str:
-        return "".join(str(line) for line in self.code)
+        ret = ""
+        for functionName in self.functionList.keys():
+            code = self.functionList[functionName]["function"]
+            ret += "".join(str(line) for line in code)
+            ret += "\n"
+        return ret
 
 class Compiler:
     def __init__(self) -> None:
         self.code = CodeBuilder()
-        self.varList = set()
-        # self.tempVarList = set()
+        self.varDict = dict()
+        self.varList = None
         self.buffer = []
+        self.varSpaceList = []
+    
+    def intoVarSpace(self,functionName):
+        self.varSpaceList.append(functionName) #FIXME: to real stack
+        if(functionName not in self.varDict):
+            self.varDict[functionName] = set()
+        self.varList = self.varDict[functionName]
+
+    def leaveVarSpace(self):
+        self.varSpaceList.pop()
+        if(len(self.varSpaceList) == 0):
+            return ''
+        self.varList = self.varDict[self.varSpaceList[-1]]
+        return self.varSpaceList[-1]
 
     def flush(self):
         if(len(self.buffer) == 0): return
@@ -43,29 +72,31 @@ class Compiler:
         self.buffer = []
     
     def compile(self,ast):
-        self.code.addLine("""def render_function(context,library,do_dots):""")
+        self.function(ast,"render")
+        result = self.code.getCode()
+        self.code = CodeBuilder()
+        self.varDict = dict()
+        self.varList = None
+        return result
+
+    def function(self,ast,functionName):
+        self.code.switchFunction(functionName)
+        self.intoVarSpace(functionName)
+        self.code.addLine("""def {name}(context,library,do_dots):""".format(name=functionName))
         self.code.indent()
         section = self.code.addSection()
         self.code.addLine("result = []")
-
         self.template(ast,[])
-
         for var in self.varList:
             section.addLine("c_{name} = context['{n}']".format(name=var,n=var))
         self.code.addLine("""return "".join(result)""")
-        result = str(self.code)
-        self.code = CodeBuilder()
-        self.varList = []
-        return result
+        self.code.dedent()
+        self.code.switchFunction(self.leaveVarSpace())
+
     
     def expression(self,node: Expression,toStr=True):
         if(node.name.isdigit()): return node.name
         name = "c_{n}".format(n=node.name)
-        # for subName in node.subNameList:
-        #     if(subName.isdigit()):
-        #         name += "[{n}]".format(n=subName)
-        #     else:
-        #         name += "['{n}']".format(n=subName)
         if(node.subNameList != []):
             args = ", ".join([repr(arg) for arg in node.subNameList])
             name = "do_dots({name},{args})".format(name=name,args=args)
@@ -93,6 +124,11 @@ class Compiler:
             if(isinstance(node, Expression)):
                 self.buffer.append(self.expression(node))
                 if(node.name not in tempVarList): self.varList.add(node.name)
+            if(isinstance(node,Block)):
+                self.flush()
+                functionName = "block_" + node.blockName
+                self.function(node.template,functionName)
+                self.buffer.append("{name}(context,library,do_dots)".format(name=functionName))
             if(isinstance(node,FOR)):
                 self.flush()
                 self.code.addLine("for c_{var} in {iter}:".format(var=node.var.name,iter=self.expression(node.iter,False)))

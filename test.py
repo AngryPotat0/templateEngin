@@ -13,5 +13,10 @@
 #lis = {"a":1,"b":2}
 #print(getattr(lis, "keys"))
 
-a = "123.45"
-print(a.isdigit())
+#a = "123.45"
+#print(a.isdigit())
+lis = []
+for i in range(10):
+    lis.append(i)
+while(lis != []):
+    print(lis.pop())

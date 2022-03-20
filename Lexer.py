@@ -169,6 +169,12 @@ class Lexer:
                 literal += self.currentChar
             self.next()
         self.tokenList.append(Token(TokenType.LITERAL,literal))
+
+    def extends(self):
+        while(self.currentChar != None and (self.currentChar != '@' or self.peek() != '}')):
+            self.next()
+        self.next()
+        self.next()
     
     def lexer(self):
         while(True):
@@ -189,6 +195,8 @@ class Lexer:
                     self.tag()
                 elif(nextChar == '#'): #注释
                     self.note()
+                elif(nextChar == '@'):
+                    self.extends()
                 else:
                     raise Exception("Unexpected char at index {}".format(self.currentIndex + 1))
             self.literal()
