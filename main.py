@@ -82,8 +82,10 @@ blockTemp = '''{@extends base.html@}
 
 '''
 #{@extends base.html@}
-template = '''{% macro showProduct(product) %}
-<li>{{ product.name }}: {{ product.price | doubleMe }}</li>
+template = '''{@extends base.html@}
+{% block tes %}
+{% macro showProduct(product) %}
+<li>{{ product.name }}: {{ product.price | toM }}</li>
 {% endmacro %}
 <p>Welcome, {{userName}}!</p>
 <p>Products:</p>
@@ -100,36 +102,19 @@ template = '''{% macro showProduct(product) %}
 {% endfor %}
 {% call showProduct(productList.0)%}
 </ul>
+{% endblock %}
 '''
 
 productList = [{"name":"book","price":12},{"name":"cup","price":22},{"name":"keyboard","price":530}]
 context = {"userName":"angryPotato","age":15,"productList":productList}
 
-# template = '''
-# {% macro showProduct(a) %}
-# <li>{{ a }}</li>
-# {% endmacro %}
-# <p>Welcome, {{userName}}!</p>
-# <p>Products:</p>
-# <ul>
-# {% for productKey in productList.keys %}
-#     {% call showProduct(productKey) %}
-# {% endfor %}
-# </ul>
-# '''
-
-
-# productList = {"name":"book","price":12,"palce":"home","tag":"useless"}
-# context = {"userName":"angryPotato","productList":productList}
-
 addN = lambda x: x + "NNN"
 doubleMe = lambda x: x * 2
+toM = lambda x: "$" + str(x)
 
 library = Library()
-library.registerFilter('addN',addN)
-library.registerFilter("doubleMe",doubleMe)
-
-render = Render(blockTemp,library)
+library.registerFilter("toM",toM)
+render = Render(template,library)
 render.compile()
 html = render.render(context)
 print(html)

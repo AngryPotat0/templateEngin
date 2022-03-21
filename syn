@@ -59,3 +59,23 @@ def render_function(context):
 {% extends file_name %}
 
 {% block block_name %} {% endblock %}
+
+
+
+
+# template = '''
+# {% macro showProduct(a) %}
+# <li>{{ a }}</li>
+# {% endmacro %}
+# <p>Welcome, {{userName}}!</p>
+# <p>Products:</p>
+# <ul>
+# {% for productKey in productList.keys %}
+#     {% call showProduct(productKey) %}
+# {% endfor %}
+# </ul>
+# '''
+
+
+# productList = {"name":"book","price":12,"palce":"home","tag":"useless"}
+# context = {"userName":"angryPotato","productList":productList}

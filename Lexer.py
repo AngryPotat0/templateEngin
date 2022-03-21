@@ -1,6 +1,7 @@
 from enum import Enum
 
 class TokenType(Enum):
+    CTAG        =   'CTAG'
     LITERAL     =   'LITERAL'
     NUM         =   'Num'
     EXPR        =   'EXPR'
@@ -127,10 +128,6 @@ class Lexer:
             if(word in self.reserved_keywords):
                 self.tokenList.append(Token(self.reserved_keywords[word],word))
             else:
-                #if(word.isdigit()):
-                #    self.tokenList.append(Token(TokenType.NUM,word))
-                #else:
-                #    self.tokenList.append(Token(TokenType.EXPR,word))
                 self.tokenList.append(Token(TokenType.EXPR,word))
         while(self.currentChar != None and (self.currentChar.isalpha() or self.currentChar.isdigit() or self.currentChar in (' ','(',')',',','.'))):
             if(self.currentChar in (' ','(',')',',','.')):
@@ -193,6 +190,7 @@ class Lexer:
                     self.expression()
                 elif(nextChar == '%'): #tag
                     self.tag()
+                    self.tokenList.append(Token(TokenType.CTAG,'CTAG'))
                 elif(nextChar == '#'): #注释
                     self.note()
                 elif(nextChar == '@'):

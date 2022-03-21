@@ -1,3 +1,4 @@
+from re import S
 from Lexer import *
 from typing import List
 
@@ -164,8 +165,10 @@ class Parser:
         self.eat(TokenType.BLOCK)
         blockName = self.currentToken.tokenValue
         self.eat(TokenType.EXPR)
+        self.eat(TokenType.CTAG)
         template = self.template()
         self.eat(TokenType.ENDBLOCK)
+        self.eat(TokenType.CTAG)
         return Block(blockName,template)
         
 
@@ -199,8 +202,10 @@ class Parser:
         iters = self.expression()
         if(iters.filterList != []):
             self.error("Iter of For cannot have subName or Filter")
+        self.eat(TokenType.CTAG)
         body = self.template()
         self.eat(TokenType.ENDFOR)
+        self.eat(TokenType.CTAG)
         return FOR(var,iters,body)
 
     def boolExpr(self):
@@ -215,21 +220,25 @@ class Parser:
         return BEXPR(statement)
 
     def ifStatement(self):
-        self.eat(TokenType.IF)
         boolBlock = list()
         elseBlock = None
+        self.eat(TokenType.IF)
         bExpr = self.boolExpr()
+        self.eat(TokenType.CTAG)
         block = self.template()
         boolBlock.append((bExpr,block))
         while(self.currentToken.tokenType == TokenType.ELIF):
             self.eat(TokenType.ELIF)
             bExpr = self.boolExpr()
+            self.eat(TokenType.CTAG)
             block = self.template()
             boolBlock.append((bExpr,block))
         if(self.currentToken.tokenType == TokenType.ELSE):
             self.eat(TokenType.ELSE)
+            self.eat(TokenType.CTAG)
             elseBlock = self.template()
         self.eat(TokenType.ENDIF)
+        self.eat(TokenType.CTAG)
         return IF(boolBlock,elseBlock)
 
     def macro(self):
@@ -248,9 +257,11 @@ class Parser:
                 valueList.append(self.currentToken.tokenValue)
                 self.eat(TokenType.EXPR)
             self.eat(TokenType.RPAREN)
+        self.eat(TokenType.CTAG)
         #body
         body = self.template()
         self.eat(TokenType.ENDMACRO)
+        self.eat(TokenType.CTAG)
         return MACRO(macroName,valueList,body)
 
     def call(self):
@@ -267,4 +278,5 @@ class Parser:
                 self.eat(TokenType.COMMA)
                 valueList.append(self.expression(False))
             self.eat(TokenType.RPAREN)
+        self.eat(TokenType.CTAG)
         return CALL(name,valueList)
