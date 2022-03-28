@@ -15,8 +15,7 @@
 
 #a = "123.45"
 #print(a.isdigit())
-lis = []
-for i in range(10):
-    lis.append(i)
-while(lis != []):
-    print(lis.pop())
+def tes(*tes):
+    print(tes[0],tes[1])
+
+tes('a','b')

@@ -1,7 +1,9 @@
+from ast import Str
 from enum import Enum
 
 class TokenType(Enum):
     CTAG        =   'CTAG'
+    STR         =   'str'
     LITERAL     =   'LITERAL'
     NUM         =   'Num'
     EXPR        =   'EXPR'
@@ -122,13 +124,20 @@ class Lexer:
         self.next()
         self.next() #eat {%
         temp = ''
+        flag = 1
 
         def addToken(word):
+            nonlocal flag
             if(word == ''): return
             if(word in self.reserved_keywords):
                 self.tokenList.append(Token(self.reserved_keywords[word],word))
             else:
-                self.tokenList.append(Token(TokenType.EXPR,word))
+                if(flag != 1):
+                    self.tokenList.append(Token(TokenType.EXPR,word))
+                else:
+                    self.tokenList.append(Token(TokenType.TAG,word))
+            flag = 0
+                    
         while(self.currentChar != None and (self.currentChar.isalpha() or self.currentChar.isdigit() or self.currentChar in (' ','(',')',',','.'))):
             if(self.currentChar in (' ','(',')',',','.')):
                 if(temp != ''):
@@ -181,9 +190,6 @@ class Lexer:
             if(self.currentChar == '\n'):
                 self.next()
                 continue
-            # if(self.currentChar == ' '):
-            #     self.skipWhiteSpace()
-            #     continue
             if(self.currentChar == '{'): #LLBRACE OR LTAG
                 nextChar = self.peek()
                 if(nextChar == '{'): #expression

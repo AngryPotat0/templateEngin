@@ -6,10 +6,14 @@ from Compiler import *
 class Library:
     def __init__(self) -> None:
         self.filter = dict()
+        self.tag = dict()
         self.filter['len'] = len
     
     def registerFilter(self,name,func):
         self.filter[name] = func
+    
+    def registerTag(self,name,func):
+        self.tag[name] = func
 
 class Render:
     def __init__(self,template,library=None) -> None:
@@ -39,15 +43,17 @@ class Render:
         # print(str(ast))
         compiler = Compiler()
         self.render_functon = compiler.compile(ast)
-        # print(self.render_functon)
+        print(self.render_functon)
 
         if(self.extendsTemplate != None):
             lex = Lexer(self.extendsTemplate)
+            # for token in lex.lexer():
+            #     print(str(token))
             p = Parser(lex.lexer())
             ast = p.parser()
             self.base_function = compiler.compile(ast)
             # print("#################")
-            # print(self.base_function)
+            print(self.base_function)
         
 
     def render(self,context):
@@ -99,6 +105,7 @@ template = '''{@extends base.html@}
 <ul>
 {% for product in productList %}
     {% call showProduct(product) %}
+    {% tes product.name product.price %}
 {% endfor %}
 {% call showProduct(productList.0)%}
 </ul>
@@ -112,8 +119,12 @@ addN = lambda x: x + "NNN"
 doubleMe = lambda x: x * 2
 toM = lambda x: "$" + str(x)
 
+def tagTes(*args):
+    return "tagTes:" + args[0] + " " + args[1]
+
 library = Library()
 library.registerFilter("toM",toM)
+library.registerTag("tes",tagTes)
 render = Render(template,library)
 render.compile()
 html = render.render(context)

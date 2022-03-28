@@ -1,3 +1,4 @@
+from ast import arg
 from re import S
 from Lexer import *
 from typing import List
@@ -14,6 +15,14 @@ class Template(AST):
         for node in self.nodeList:
             ans += str(node)
         return ans + "\n"
+
+class Tag(AST):
+    def __init__(self,tagName,argList) -> None:
+        self.tagName = tagName
+        self.argList = argList
+    
+    def __str__(self) -> str:
+        return self.tagName + "::" + " ".join([str(arg) for arg in self.argList])
 
 class Block(AST):
     def __init__(self,blockName,template):
@@ -157,6 +166,8 @@ class Parser:
             elif(self.currentToken.tokenType == TokenType.BLOCK):
                 template.nodeList.append(self.block())
                 continue
+            elif(self.currentToken.tokenType == TokenType.TAG):
+                template.nodeList.append(self.tag())
             else:
                 break
         return template
@@ -170,7 +181,15 @@ class Parser:
         self.eat(TokenType.ENDBLOCK)
         self.eat(TokenType.CTAG)
         return Block(blockName,template)
-        
+
+    def tag(self):
+        tagName = self.currentToken.tokenValue
+        self.eat(TokenType.TAG)
+        args = []
+        while(self.currentToken.tokenType != TokenType.CTAG):
+            args.append(self.expression(allowFilter=False))
+        self.eat(TokenType.CTAG)
+        return Tag(tagName,args)
 
     def expression(self,allowFilter=True): # 现在表达式只有变量名
         expression = self.currentToken.tokenValue

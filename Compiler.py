@@ -177,4 +177,10 @@ class Compiler:
                     lis.append(self.expression(value,False))
                 valueStr = ",".join(lis)
                 self.code.addLine("macro_{name}({lis})".format(name=macroName,lis=valueStr))
+            if(isinstance(node,Tag)):
+                self.flush()
+                tagName = node.tagName
+                argList = ",".join([self.expression(arg) for arg in node.argList])
+                # self.code.addLine("library.tag['{name}']({args})".format(name=tagName,args=argList))
+                self.buffer.append("library.tag['{name}']({args})".format(name=tagName,args=argList))
         self.flush()
