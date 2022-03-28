@@ -124,6 +124,16 @@ class Parser:
         self.tokenList = tokenList
         self.currentIndex = 0
         self.currentToken = self.tokenList[self.currentIndex]
+        self.dictList = {
+            TokenType.LITERAL   : self.literal,
+            TokenType.EXPR      : self.expression,
+            TokenType.FOR       : self.forLoop,
+            TokenType.IF        : self.ifStatement,
+            TokenType.MACRO     : self.macro,
+            TokenType.CALL      : self.call,
+            TokenType.BLOCK     : self.block,
+            TokenType.TAG       : self.tag
+        }
 
     def error(self,msg):
         raise Exception(msg)
@@ -144,33 +154,16 @@ class Parser:
     def template(self):
         template = Template()
         while(self.currentToken.tokenType != TokenType.EOF):
-            if(self.currentToken.tokenType == TokenType.LITERAL):
-                template.nodeList.append(Literal(self.currentToken.tokenValue))
-                self.eat(TokenType.LITERAL)
-                continue
-            elif(self.currentToken.tokenType == TokenType.EXPR):
-                template.nodeList.append(self.expression())
-                continue
-            elif(self.currentToken.tokenType == TokenType.FOR):
-                template.nodeList.append(self.forLoop())
-                continue
-            elif(self.currentToken.tokenType == TokenType.IF):
-                template.nodeList.append(self.ifStatement())
-                continue
-            elif(self.currentToken.tokenType == TokenType.MACRO):
-                template.nodeList.append(self.macro())
-                continue
-            elif(self.currentToken.tokenType == TokenType.CALL):
-                template.nodeList.append(self.call())
-                continue
-            elif(self.currentToken.tokenType == TokenType.BLOCK):
-                template.nodeList.append(self.block())
-                continue
-            elif(self.currentToken.tokenType == TokenType.TAG):
-                template.nodeList.append(self.tag())
+            if(self.currentToken.tokenType in self.dictList):
+                template.nodeList.append(self.dictList[self.currentToken.tokenType]())
             else:
                 break
         return template
+
+    def literal(self):
+        ans = Literal(self.currentToken.tokenValue)
+        self.eat(TokenType.LITERAL)
+        return ans
 
     def block(self):
         self.eat(TokenType.BLOCK)
