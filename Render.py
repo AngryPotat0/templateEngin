@@ -1,3 +1,4 @@
+from unicodedata import name
 from Lexer import *
 from Parser import *
 from Compiler import *
@@ -15,14 +16,30 @@ class Library:
         self.tag[name] = func
 
 class Render:
-    def __init__(self,fileName,library=None) -> None:
+    def __init__(self,fileName) -> None:
         self.template = ''
         with open(fileName,'r') as f:
             self.template = f.read()
         self.extendsTemplate = None
         self.render_functon = None
         self.base_function = None
-        self.library = library
+        self.library = Library()
+
+    def registerFilter(self,target):
+        def register(k,v):
+            self.library.registerFilter(k,v)
+        if(callable(target)):
+            return register(target.__name__, target)
+        else:
+            return lambda x : register(target, x)
+
+    def registerTag(self,target):
+        def register(k,v):
+            self.library.registerTag(k,v)
+        if(callable(target)):
+            return register(target.__name__, target)
+        else:
+            return lambda x : register(target, x)
 
     def extends(self,line):
         fileName = line[2:len(line) - 2].split()[1]
