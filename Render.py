@@ -1,4 +1,3 @@
-from unicodedata import name
 from Lexer import *
 from Parser import *
 from Compiler import *

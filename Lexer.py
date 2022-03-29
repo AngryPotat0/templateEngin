@@ -1,4 +1,3 @@
-from ast import Str
 from enum import Enum
 
 class TokenType(Enum):
